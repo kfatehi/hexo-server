@@ -136,6 +136,16 @@ describe('server', () => {
       .expect(200, content))).finally(() => fs.unlink(path));
   });
 
+  it('static asset range', () => {
+    const path = join(hexo.public_dir, 'test.html');
+    const content = 'test html';
+
+    return fs.writeFile(path, content).then(() => Promise.using(prepareServer(), app => request(app).get('/test.html')
+      .set('Range', 'bytes=0-1') // this Range causes an error
+      .expect('Content-Length', '2')
+      .expect(206, "te"))).finally(() => fs.unlink(path));
+  });
+
   it('invalid port', () => server({port: -100}).should.to.rejectedWith(RangeError, 'Port number -100 is invalid. Try a number between 1 and 65535.'));
 
   it('invalid port > 65535', () => server({port: 65536}).should.to.rejectedWith(RangeError, 'Port number 65536 is invalid. Try a number between 1 and 65535.'));
